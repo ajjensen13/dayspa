@@ -16,8 +16,13 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 package main
 
-import "github.com/ajjensen13/dayspa/cmd"
+import (
+	"github.com/ajjensen13/gke"
+
+	"github.com/ajjensen13/dayspa/cmd"
+)
 
 func main() {
+	gke.LogStd = true
 	cmd.Execute()
 }
