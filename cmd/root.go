@@ -50,6 +50,8 @@ var rootCmd = &cobra.Command{
 
 		lg := logc.Logger("dayspa")
 
+		lg.Info("gke.Metadata()", gke.Metadata())
+
 		srv, err := InjectServer(ctx, lg, cmd)
 		if err != nil {
 			panic(lg.ErrorErr(err))
@@ -90,7 +92,7 @@ func init() {
 	const webrootFlag = "webroot"
 	rootCmd.PersistentFlags().StringP(webrootFlag, "w", ".", "Web root directory")
 	const addrFlag = "addr"
-	rootCmd.PersistentFlags().StringP(addrFlag, "a", ".", "address to listen on")
+	rootCmd.PersistentFlags().StringP(addrFlag, "a", ":http", "address to listen on")
 }
 
 func initConfig() {
