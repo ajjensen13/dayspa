@@ -19,6 +19,7 @@ package cmd
 import (
 	"context"
 	"errors"
+	"time"
 
 	"fmt"
 	"github.com/spf13/cobra"
@@ -38,7 +39,7 @@ import (
 var rootCmd = &cobra.Command{
 	Use: "dayspa",
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx, cancelFunc := gke.Alive()
+		ctx, cancelFunc := gke.AliveContext()
 		defer cancelFunc()
 
 		logc, cleanup, err := gke.NewLogClient(ctx)
@@ -54,12 +55,17 @@ var rootCmd = &cobra.Command{
 			panic(lg.ErrorErr(err))
 		}
 
-		switch err := srv.ListenAndServe(); {
-		case errors.Is(err, http.ErrServerClosed):
-			lg.Noticef("server shutdown gracefully")
-		default:
-			panic(lg.ErrorErr(err))
-		}
+		gke.Do(func(ctx context.Context) error {
+			switch err := srv.ListenAndServe(); {
+			case errors.Is(err, http.ErrServerClosed):
+				lg.Noticef("server shutdown gracefully")
+				return nil
+			default:
+				return lg.ErrorErr(err)
+			}
+		})
+
+		_ = gke.WaitForCleanup(time.Second * 10)
 	},
 }
 
@@ -81,10 +87,8 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.dayspa.yaml)")
 	const modeFlag = "mode"
 	rootCmd.PersistentFlags().StringVarP(&mode, modeFlag, "m", "", "mode to use (currently, only \"ngsw\" is supported)")
-	viper.BindPFlag(modeFlag, rootCmd.PersistentFlags().Lookup(modeFlag))
 	const webrootFlag = "webroot"
 	rootCmd.PersistentFlags().StringP(webrootFlag, "w", ".", "Web root directory")
-	viper.BindPFlag(webrootFlag, rootCmd.PersistentFlags().Lookup(webrootFlag))
 }
 
 func initConfig() {

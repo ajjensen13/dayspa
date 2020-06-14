@@ -31,56 +31,83 @@ import (
 )
 
 type logEntry struct {
-	WebRoot  string   `json:"web_root"`
-	Index    string   `json:"index"`
-	Assets   []string `json:"assets"`
-	Checksum string   `json:"checksum"`
+	WebRoot         string          `json:"web_root"`
+	ManifestDetails manifestDetails `json:"manifest_details"`
+	SiteDetails     siteDetails     `json:"site_details"`
+}
+
+type manifestDetails struct {
+	Path     string
+	Manifest *manifest.Manifest
+}
+
+type siteDetails struct {
+	Index    string
+	Assets   []string
+	Checksum string
 }
 
 func Ngsw(webroot string, lg gke.Logger) (*manifest.Site, error) {
 	entry := logEntry{WebRoot: webroot}
 	defer func() { lg.Log(logging.Entry{Severity: logging.Info, Payload: entry}) }()
 
-	f, err := os.Open(filepath.Join(webroot, "ngsw.json"))
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	var m manifest.Manifest
-	err = json.NewDecoder(f).Decode(&m)
+	var err error
+	entry.ManifestDetails, err = parseManifest(webroot)
 	if err != nil {
 		return nil, err
 	}
 
-	result := manifest.Site{
-		Index: m.Index,
+	m := entry.ManifestDetails.Manifest
+
+	result := manifest.Site{Index: m.Index}
+
+	result.Assets, err = loadAssets(webroot, m.AssetGroups)
+	if err != nil {
+		return nil, err
 	}
 
 	c := sha256.New()
-	for _, a := range m.AssetGroups {
-		for _, url := range a.Urls {
-			lazy := a.InstallMode == manifest.Lazy
-			asset, err := newEncodedAsset(webroot, url, lazy)
-			if err != nil {
-				return nil, nil
-			}
-
-			result.Assets = append(result.Assets, asset)
-		}
-	}
-
-	sort.Sort(result.Assets)
-
 	for _, asset := range result.Assets {
 		c.Write([]byte(asset.Etag))
-		entry.Assets = append(entry.Assets, fmt.Sprintf("%s@%s %s", asset.File, asset.Etag, asset.ContentType))
+		entry.SiteDetails.Assets = append(entry.SiteDetails.Assets, fmt.Sprintf("%s@%s %s", asset.File, asset.Etag, asset.ContentType))
 	}
 
 	result.Checksum = base64.StdEncoding.EncodeToString(c.Sum(nil))
 
-	entry.Index = result.Index
-	entry.Checksum = result.Checksum
+	entry.SiteDetails.Index = result.Index
+	entry.SiteDetails.Checksum = result.Checksum
 
 	return &result, nil
+}
+
+func loadAssets(webroot string, assets []manifest.AssetGroup) (manifest.EncodedAssets, error) {
+	var result manifest.EncodedAssets
+	for _, a := range assets {
+		for _, url := range a.Urls {
+			lazy := a.InstallMode == manifest.Lazy
+			asset, err := newEncodedAsset(webroot, url, lazy)
+			if err != nil {
+				return nil, err
+			}
+
+			result = append(result, asset)
+		}
+	}
+
+	sort.Sort(result)
+	return result, nil
+}
+
+func parseManifest(webroot string) (result manifestDetails, err error) {
+	result.Path = filepath.Join(webroot, "ngsw.json")
+
+	var f *os.File
+	f, err = os.Open(result.Path)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	err = json.NewDecoder(f).Decode(&result.Manifest)
+	return
 }
