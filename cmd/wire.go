@@ -27,5 +27,5 @@ import (
 )
 
 func InjectServer(ctx context.Context, lg gke.Logger, cmd *cobra.Command) (*http.Server, error) {
-	panic(wire.Build(provideWebRoot, provideSite, provideHandler, provideServer, provideMode))
+	panic(wire.Build(provideWebRoot, provideSite, provideHandler, provideServer, provideMode, provideAddr))
 }

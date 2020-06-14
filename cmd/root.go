@@ -65,7 +65,7 @@ var rootCmd = &cobra.Command{
 			}
 		})
 
-		_ = gke.WaitForCleanup(time.Second * 10)
+		<-gke.AfterAliveContext(time.Second * 10).Done()
 	},
 }
 
@@ -89,6 +89,8 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&mode, modeFlag, "m", "", "mode to use (currently, only \"ngsw\" is supported)")
 	const webrootFlag = "webroot"
 	rootCmd.PersistentFlags().StringP(webrootFlag, "w", ".", "Web root directory")
+	const addrFlag = "addr"
+	rootCmd.PersistentFlags().StringP(addrFlag, "a", ".", "address to listen on")
 }
 
 func initConfig() {
@@ -148,10 +150,21 @@ func provideHandler(site *manifest.Site, lg gke.Logger) http.Handler {
 	return serve.Handler(site, lg)
 }
 
-func provideServer(ctx context.Context, handler http.Handler, lg gke.Logger) (*http.Server, error) {
+type addrType string
+
+func provideAddr(cmd *cobra.Command) (addrType, error) {
+	result, err := cmd.Flags().GetString("addr")
+	if err != nil {
+		return "", err
+	}
+	return addrType(result), nil
+}
+
+func provideServer(ctx context.Context, handler http.Handler, lg gke.Logger, addr addrType) (*http.Server, error) {
 	result, err := gke.NewServer(ctx, handler, lg)
 	if err != nil {
 		return nil, err
 	}
+	result.Addr = string(addr)
 	return result, nil
 }

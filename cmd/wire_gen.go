@@ -28,7 +28,11 @@ func InjectServer(ctx context.Context, lg gke.Logger, cmd *cobra.Command) (*http
 		return nil, err
 	}
 	handler := provideHandler(site, lg)
-	server, err := provideServer(ctx, handler, lg)
+	cmdAddrType, err := provideAddr(cmd)
+	if err != nil {
+		return nil, err
+	}
+	server, err := provideServer(ctx, handler, lg, cmdAddrType)
 	if err != nil {
 		return nil, err
 	}
