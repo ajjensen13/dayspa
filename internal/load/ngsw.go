@@ -17,7 +17,6 @@
 package load
 
 import (
-	"cloud.google.com/go/logging"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
@@ -49,7 +48,7 @@ type siteDetails struct {
 
 func Ngsw(webroot string, lg gke.Logger) (*manifest.Site, error) {
 	entry := logEntry{WebRoot: webroot}
-	defer func() { lg.Log(logging.Entry{Severity: logging.Info, Payload: entry}) }()
+	defer func() { lg.Info(gke.NewMsgData("loaded ngsw.json", entry)) }()
 
 	var err error
 	entry.ManifestDetails, err = parseManifest(webroot)

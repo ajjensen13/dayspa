@@ -17,8 +17,8 @@
 package serve
 
 import (
-	"cloud.google.com/go/logging"
 	"errors"
+	"fmt"
 	"github.com/ajjensen13/gke"
 	"net/http"
 	"path"
@@ -75,6 +75,11 @@ type logEntry struct {
 type requestDetails struct {
 	Method string `json:"method"`
 	Path   string `json:"path"`
+	Host   string `json:"host"`
+}
+
+func (r requestDetails) String() string {
+	return fmt.Sprintf("%s %s%s", r.Method, r.Host, r.Path)
 }
 
 type serveDetails struct {
@@ -93,9 +98,10 @@ type pushDetails struct {
 func (h *handler) ServeHTTP(wr http.ResponseWriter, r *http.Request) {
 	entry := logEntry{RequestDetails: requestDetails{
 		Method: r.Method,
+		Host:   r.Host,
 		Path:   r.URL.Path,
 	}}
-	defer func() { h.Logger.Log(logging.Entry{Severity: logging.Info, Payload: entry}) }()
+	defer func() { h.Logger.Info(gke.NewMsgData(entry.RequestDetails.String(), entry)) }()
 
 	entry.PushDetails = h.tryPush(wr, r)
 	entry.ServeDetails = h.serveAsset(wr, r)
