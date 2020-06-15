@@ -26,9 +26,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/mitchellh/go-homedir"
-	"github.com/spf13/viper"
-
 	"github.com/ajjensen13/gke"
 
 	"github.com/ajjensen13/dayspa/internal/load"
@@ -80,39 +77,11 @@ var (
 )
 
 func init() {
-	cobra.OnInitialize(initConfig)
-
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.dayspa.yaml)")
-	const modeFlag = "mode"
-	rootCmd.PersistentFlags().StringVarP(&mode, modeFlag, "m", "", "mode to use (currently, only \"ngsw\" is supported)")
-	const webrootFlag = "webroot"
-	rootCmd.PersistentFlags().StringP(webrootFlag, "w", ".", "Web root directory")
-	const addrFlag = "addr"
-	rootCmd.PersistentFlags().StringP(addrFlag, "a", ":http", "address to listen on")
-}
-
-func initConfig() {
-	if cfgFile != "" {
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
-		// Search config in home directory with name ".dayspa" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".dayspa")
-	}
-
-	viper.AutomaticEnv()
-
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
-	}
+	flags := rootCmd.PersistentFlags()
+	flags.StringVar(&cfgFile, "config", "", "config file (default is $HOME/.dayspa.yaml)")
+	flags.StringVarP(&mode, "mode", "m", "", "mode to use (currently, only \"ngsw\" is supported)")
+	flags.StringP("webroot", "w", ".", "Web root directory")
+	flags.StringP("addr", "a", ":http", "address to listen on")
 }
 
 type webRoot string
