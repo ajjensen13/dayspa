@@ -39,26 +39,21 @@ import (
 var rootCmd = &cobra.Command{
 	Use: "dayspa",
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx, cancelFunc := gke.AliveContext()
-		defer cancelFunc()
-
-		logc, cleanup, err := gke.NewLogClient(ctx)
+		lg, cleanup, err := gke.NewLogger(context.Background())
 		if err != nil {
 			panic(err)
 		}
 		defer cleanup()
 
-		lg := logc.Logger("dayspa")
-
-		m, ok := gke.Metadata()
-		lg.Info("gke.Metadata()", m, ok)
-
-		srv, err := InjectServer(ctx, lg, cmd)
-		if err != nil {
-			panic(lg.ErrorErr(err))
-		}
+		gke.LogEnv(lg)
+		gke.LogMetadata(lg)
 
 		gke.Do(func(ctx context.Context) error {
+			srv, err := InjectServer(ctx, lg, cmd)
+			if err != nil {
+				panic(lg.ErrorErr(err))
+			}
+
 			switch err := srv.ListenAndServe(); {
 			case errors.Is(err, http.ErrServerClosed):
 				lg.Noticef("server shutdown gracefully")
