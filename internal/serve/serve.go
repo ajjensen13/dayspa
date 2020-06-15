@@ -31,6 +31,7 @@ import (
 	"github.com/ajjensen13/dayspa/internal/manifest"
 )
 
+// Handler returns an http.Handler that serves a manifest.
 func Handler(site *manifest.Site, lg gke.Logger) http.Handler {
 	result := handler{
 		Index:      site.Index,
@@ -192,8 +193,8 @@ func (h *handler) serveAsset(wr http.ResponseWriter, r *http.Request) (result se
 	encodings := r.Header.Get("Accept-Encoding")
 	for _, datum := range asset.Data {
 
-		es := datum.Encoding.String()
-		if strings.Contains(encodings, es) || manifest.Identity == datum.Encoding {
+		es := datum.ContentEncoding.String()
+		if strings.Contains(encodings, es) || manifest.Identity == datum.ContentEncoding {
 			header.Set("Content-Encoding", es)
 		}
 

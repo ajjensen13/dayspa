@@ -62,6 +62,7 @@ type siteDetails struct {
 	Checksum string
 }
 
+// Loads an ngsw.json based webroot into a site manifest.
 func Ngsw(webroot string, lg gke.Logger) (*manifest.Site, error) {
 	entry := logEntry{WebRoot: webroot}
 	defer func() { lg.Info(gke.NewMsgData("loaded ngsw.json", entry)) }()

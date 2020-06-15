@@ -39,7 +39,7 @@ func identityEncoded(fpath string) (*manifest.EncodedDatum, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &manifest.EncodedDatum{Encoding: manifest.Identity, Data: data}, nil
+	return &manifest.EncodedDatum{ContentEncoding: manifest.Identity, Data: data}, nil
 }
 
 func gzipEncoded(raw []byte) (*manifest.EncodedDatum, error) {
@@ -59,7 +59,7 @@ func gzipEncoded(raw []byte) (*manifest.EncodedDatum, error) {
 		return nil, err
 	}
 
-	return &manifest.EncodedDatum{Encoding: manifest.Gzip, Data: buf.Bytes()}, nil
+	return &manifest.EncodedDatum{ContentEncoding: manifest.Gzip, Data: buf.Bytes()}, nil
 }
 
 func flateEncoded(raw []byte) (*manifest.EncodedDatum, error) {
@@ -79,7 +79,7 @@ func flateEncoded(raw []byte) (*manifest.EncodedDatum, error) {
 		return nil, err
 	}
 
-	return &manifest.EncodedDatum{Encoding: manifest.Deflate, Data: buf.Bytes()}, nil
+	return &manifest.EncodedDatum{ContentEncoding: manifest.Deflate, Data: buf.Bytes()}, nil
 }
 
 func calculateETag(raw []byte) string {
