@@ -22,28 +22,6 @@ import (
 	"time"
 )
 
-type Mode string
-
-const (
-	Prefetch Mode = "prefetch"
-	Lazy     Mode = "lazy"
-)
-
-type Manifest struct {
-	ConfigVersion uint32       `json:"configVersion"`
-	Timestamp     uint64       `json:"timestamp"`
-	Index         string       `json:"index"`
-	AssetGroups   []AssetGroup `json:"assetGroups"`
-}
-
-type AssetGroup struct {
-	Name        string   `json:"name"`
-	InstallMode Mode     `json:"installMode"`
-	UpdateMode  Mode     `json:"updateMode"`
-	Urls        []string `json:"urls"`
-	Patterns    []string `json:"patterns"`
-}
-
 //go:generate stringer -type Encoding -linecomment
 type Encoding int
 

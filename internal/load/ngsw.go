@@ -30,6 +30,21 @@ import (
 	"github.com/ajjensen13/dayspa/internal/manifest"
 )
 
+type ngswManifest struct {
+	ConfigVersion uint32           `json:"configVersion"`
+	Timestamp     uint64           `json:"timestamp"`
+	Index         string           `json:"index"`
+	AssetGroups   []ngswAssetGroup `json:"assetGroups"`
+}
+
+type ngswAssetGroup struct {
+	Name        string   `json:"name"`
+	InstallMode string   `json:"installMode"`
+	UpdateMode  string   `json:"updateMode"`
+	Urls        []string `json:"urls"`
+	Patterns    []string `json:"patterns"`
+}
+
 type logEntry struct {
 	WebRoot         string          `json:"web_root"`
 	ManifestDetails manifestDetails `json:"manifest_details"`
@@ -38,7 +53,7 @@ type logEntry struct {
 
 type manifestDetails struct {
 	Path     string
-	Manifest *manifest.Manifest
+	Manifest *ngswManifest
 }
 
 type siteDetails struct {
@@ -80,11 +95,11 @@ func Ngsw(webroot string, lg gke.Logger) (*manifest.Site, error) {
 	return &result, nil
 }
 
-func loadAssets(webroot string, assets []manifest.AssetGroup) (manifest.EncodedAssets, error) {
+func loadAssets(webroot string, assets []ngswAssetGroup) (manifest.EncodedAssets, error) {
 	var result manifest.EncodedAssets
 	for _, a := range assets {
 		for _, url := range a.Urls {
-			lazy := a.InstallMode == manifest.Lazy
+			lazy := a.InstallMode == "lazy"
 			asset, err := newEncodedAsset(webroot, url, lazy)
 			if err != nil {
 				return nil, err
