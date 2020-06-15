@@ -50,7 +50,8 @@ var rootCmd = &cobra.Command{
 
 		lg := logc.Logger("dayspa")
 
-		lg.Info("gke.Metadata()", gke.Metadata())
+		m, ok := gke.Metadata()
+		lg.Info("gke.Metadata()", m, ok)
 
 		srv, err := InjectServer(ctx, lg, cmd)
 		if err != nil {

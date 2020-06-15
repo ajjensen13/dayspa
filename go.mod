@@ -5,7 +5,7 @@ go 1.14
 require (
 	cloud.google.com/go/logging v1.0.0
 	cloud.google.com/go/storage v1.9.0 // indirect
-	github.com/ajjensen13/gke v0.0.32
+	github.com/ajjensen13/gke v0.0.33
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/google/wire v0.4.0
 	github.com/mitchellh/go-homedir v1.1.0
