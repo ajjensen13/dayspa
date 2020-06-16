@@ -1,18 +1,18 @@
-ARG GO_VERSION=1
-ARG ALPINE_VERSION
+ARG GO_VERSION
 
-FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} as build
+FROM golang:${GO_VERSION} as build
 ARG GCFLAGS="-c 1"
 ENV CGO_ENABLED=0
 ENV GO111MODULE=on
 WORKDIR /src/app
+RUN go get github.com/go-delve/delve/cmd/dlv
 COPY ./go.mod ./go.sum ./
 RUN go mod download
 COPY . .
 RUN go test -json ./...
-RUN go build -gcflags "$GCFLAGS" -o /bin/dayspa
+RUN go build -gcflags "$GCFLAGS" -o /go/bin/app
 
-FROM alpine:${ALPINE_VERSION} as run
-WORKDIR /src/app
-COPY --from=build /bin/dayspa /bin/dayspa
-ENTRYPOINT [ "/bin/dayspa", "--mode=ngsw", "--webroot=/var/www/html" ]
+FROM gcr.io/distroless/base as run
+ENV GOTRACEBACK=single
+COPY --from=build /go/bin/* /bin/
+CMD [ "/bin/app", "--mode=ngsw", "--webroot=/var/www/html" ]
