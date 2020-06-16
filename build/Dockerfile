@@ -1,4 +1,5 @@
 ARG GO_VERSION
+ARG RUN_TAG=latest
 
 FROM golang:${GO_VERSION} as build
 ARG GCFLAGS="-c 1"
@@ -12,7 +13,7 @@ COPY . .
 RUN go test -json ./...
 RUN go build -gcflags "$GCFLAGS" -o /go/bin/app
 
-FROM gcr.io/distroless/base as run
+FROM gcr.io/distroless/base:${RUN_TAG} as run
 ENV GOTRACEBACK=single
 COPY --from=build /go/bin/* /bin/
 CMD [ "/bin/app", "--mode=ngsw", "--webroot=/var/www/html" ]

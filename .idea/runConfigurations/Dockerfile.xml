@@ -3,7 +3,7 @@
     <deployment type="dockerfile">
       <settings>
         <option name="imageTag" value="gcr.io/ajensen-1993/dayspa:bootstrap" />
-        <option name="buildCliOptions" value="--build-arg GO_VERSION=1.14.4" />
+        <option name="buildCliOptions" value="--build-arg GO_VERSION=1.14.4 --build-arg RUN_TAG=debug" />
         <option name="command" value="" />
         <option name="containerName" value="" />
         <option name="entrypoint" value="" />
