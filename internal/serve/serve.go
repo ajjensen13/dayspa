@@ -90,13 +90,22 @@ type serveDetails struct {
 	Size   int `json:"size"`
 }
 
+var (
+	boolTrue  = true
+	boolFalse = false
+)
+
 type pushDetails struct {
-	RequestTriggersPush bool     `json:"request_triggers_push"`
-	ClientSupportsPush  bool     `json:"client_supports_push"`
-	ClientNeedsAssets   bool     `json:"client_needs_assets"`
+	RequestTriggersPush *bool    `json:"request_triggers_push"`
+	ClientSupportsPush  *bool    `json:"client_supports_push"`
+	ClientNeedsAssets   *bool    `json:"client_needs_assets"`
 	PushAttempted       bool     `json:"push_attempted"`
+	ServerChecksum      string   `json:"server_checksum,omitempty"`
+	ClientChecksum      string   `json:"client_checksum,omitempty"`
 	Assets              []string `json:"assets"`
 }
+
+const pushCookieName = "_dayspa_push"
 
 func (h *handler) ServeHTTP(wr http.ResponseWriter, r *http.Request) {
 	entry := logEntry{RequestDetails: requestDetails{
@@ -115,27 +124,33 @@ func requestTriggersPush(p string, index string) bool {
 }
 
 func (h *handler) tryPush(wr http.ResponseWriter, r *http.Request) (result pushDetails) {
+	result.ServerChecksum = h.Checksum
 	if !requestTriggersPush(r.URL.Path, h.Index) {
+		result.RequestTriggersPush = &boolFalse
 		return
 	}
-	result.RequestTriggersPush = true
+	result.RequestTriggersPush = &boolTrue
 
 	pusher, ok := wr.(http.Pusher)
 	if !ok {
+		result.ClientSupportsPush = &boolFalse
 		return
 	}
-	result.ClientSupportsPush = true
+	result.ClientSupportsPush = &boolTrue
 
-	if clientHasAssets(r, h.Checksum) {
+	if clientHasAssets(r, h.Checksum, &result) {
+		result.ClientNeedsAssets = &boolFalse
 		return
 	}
-	result.ClientNeedsAssets = true
+	result.ClientNeedsAssets = &boolTrue
 
 	http.SetCookie(wr, &http.Cookie{
-		Name:   "_dayspa_push",
-		Value:  h.Checksum,
-		Path:   "/",
-		MaxAge: int(time.Hour * 24 * 365 / time.Second), // 1 year in seconds
+		Name:     pushCookieName,
+		Value:    h.Checksum,
+		Path:     "/",
+		Domain:   r.Host,
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   int(time.Hour * 24 * 365 / time.Second), // 1 year in seconds
 	})
 
 	result.PushAttempted = true
