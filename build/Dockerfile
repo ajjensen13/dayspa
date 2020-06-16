@@ -1,4 +1,4 @@
-ARG GO_VERSION
+ARG GO_VERSION=latest
 ARG RUN_TAG=latest
 
 FROM golang:${GO_VERSION} as build
