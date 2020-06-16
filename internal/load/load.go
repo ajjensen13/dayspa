@@ -87,7 +87,7 @@ func calculateETag(raw []byte) string {
 	return base64.StdEncoding.EncodeToString(hash[:])
 }
 
-func newEncodedAsset(webroot, url string, lazy bool) (*manifest.EncodedAsset, error) {
+func newEncodedAsset(webroot, url string, lazy bool, source string) (*manifest.EncodedAsset, error) {
 	fpath := filepath.FromSlash(url)
 	fpath = filepath.Join(webroot, url)
 
@@ -100,6 +100,7 @@ func newEncodedAsset(webroot, url string, lazy bool) (*manifest.EncodedAsset, er
 		Url:     url,
 		File:    fpath,
 		Lazy:    lazy,
+		Source:  source,
 		ModTime: fi.ModTime(),
 	}
 

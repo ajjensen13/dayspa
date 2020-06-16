@@ -63,6 +63,7 @@ type EncodedAsset struct {
 	ContentType ContentType `json:"content_type"`
 	Etag        string      `json:"etag"`
 	Data        EncodedData `json:"-"`
+	Source      string      `json:"source"`
 }
 
 // EncodedDatum represents a single encoding of a single asset.
@@ -116,4 +117,14 @@ func (e EncodedAssets) Less(i, j int) bool {
 // Len implements sort.Interface.Swap()
 func (e EncodedAssets) Swap(i, j int) {
 	e[i], e[j] = e[j], e[i]
+}
+
+// Contains returns true if the list of encoded assets contains the requested url.
+func (e EncodedAssets) Contains(url string) bool {
+	for _, asset := range e {
+		if asset.Url == url {
+			return true
+		}
+	}
+	return false
 }

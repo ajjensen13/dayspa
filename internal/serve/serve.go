@@ -120,7 +120,11 @@ func (h *handler) ServeHTTP(wr http.ResponseWriter, r *http.Request) {
 }
 
 func requestTriggersPush(p string, index string) bool {
-	return p == index || filepath.Ext(p) == ""
+	return p == index || navigationUrl(p)
+}
+
+func navigationUrl(p string) bool {
+	return filepath.Ext(p) == ""
 }
 
 func (h *handler) tryPush(wr http.ResponseWriter, r *http.Request) (result pushDetails) {
