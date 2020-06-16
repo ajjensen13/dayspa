@@ -13,13 +13,13 @@ func _() {
 	_ = x[Deflate-2]
 }
 
-const _Encoding_name = "identitygzipdeflate"
+const _ContentEncoding_name = "identitygzipdeflate"
 
-var _Encoding_index = [...]uint8{0, 8, 12, 19}
+var _ContentEncoding_index = [...]uint8{0, 8, 12, 19}
 
 func (i ContentEncoding) String() string {
-	if i < 0 || i >= ContentEncoding(len(_Encoding_index)-1) {
+	if i < 0 || i >= ContentEncoding(len(_ContentEncoding_index)-1) {
 		return "ContentEncoding(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
-	return _Encoding_name[_Encoding_index[i]:_Encoding_index[i+1]]
+	return _ContentEncoding_name[_ContentEncoding_index[i]:_ContentEncoding_index[i+1]]
 }
