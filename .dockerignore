@@ -1,0 +1,7 @@
+.DS_Store
+.idea/
+.git/
+deploy/
+test/
+/ajensen-server
+/ajensen-server.exe
