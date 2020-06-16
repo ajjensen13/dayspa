@@ -173,14 +173,16 @@ func (h *handler) tryPush(wr http.ResponseWriter, r *http.Request) (result pushD
 	return
 }
 
-func clientHasAssets(r *http.Request, checksum string) bool {
-	c, err := r.Cookie("_dayspa_push")
+func clientHasAssets(r *http.Request, checksum string, p *pushDetails) bool {
+	c, err := r.Cookie(pushCookieName)
 	switch {
 	case errors.Is(err, http.ErrNoCookie):
 		return false
 	case c.Value == checksum:
+		p.ClientChecksum = c.Value
 		return true
 	default:
+		p.ClientChecksum = c.Value
 		return false
 	}
 }
