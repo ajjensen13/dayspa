@@ -14,6 +14,7 @@ RUN go test -json ./...
 RUN go build -gcflags "$GCFLAGS" -o /go/bin/app
 
 FROM gcr.io/distroless/base:${RUN_TAG} as run
+ENTRYPOINT []
 ENV GOTRACEBACK=single
 COPY --from=build /go/bin/* /bin/
 CMD [ "/bin/app", "--mode=ngsw", "--webroot=/var/www/html" ]
