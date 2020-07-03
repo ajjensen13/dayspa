@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package load
+package ngsw
 
 import (
 	"crypto/sha256"
@@ -29,6 +29,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/ajjensen13/dayspa/internal/load/log"
+	"github.com/ajjensen13/dayspa/internal/load/shared"
 	"github.com/ajjensen13/dayspa/internal/manifest"
 )
 
@@ -47,26 +49,9 @@ type ngswAssetGroup struct {
 	Patterns    []string `json:"patterns"`
 }
 
-type logEntry struct {
-	WebRoot         string          `json:"web_root"`
-	ManifestDetails manifestDetails `json:"manifest_details"`
-	SiteDetails     siteDetails     `json:"site_details"`
-}
-
-type manifestDetails struct {
-	Path     string
-	Manifest *ngswManifest
-}
-
-type siteDetails struct {
-	Index    string
-	Assets   []string
-	Checksum string
-}
-
 // Loads an ngsw.json based webroot into a site manifest.
-func Ngsw(webroot string, lg gke.Logger) (*manifest.Site, error) {
-	entry := logEntry{WebRoot: webroot}
+func Load(webroot string, lg gke.Logger) (*manifest.Site, error) {
+	entry := log.Entry{WebRoot: webroot}
 	defer func() { lg.Info(gke.NewMsgData("loaded ngsw.json", entry)) }()
 
 	var err error
@@ -75,7 +60,7 @@ func Ngsw(webroot string, lg gke.Logger) (*manifest.Site, error) {
 		return nil, err
 	}
 
-	m := entry.ManifestDetails.Manifest
+	m := entry.ManifestDetails.Manifest.(ngswManifest)
 
 	result := manifest.Site{Index: m.Index}
 
@@ -106,7 +91,7 @@ func loadAssets(webroot string, assets []ngswAssetGroup) (manifest.EncodedAssets
 			url = path.Clean(url) // use consistent cleaning with assets from manifest and from filesystem
 
 			lazy := a.InstallMode == "lazy"
-			asset, err := newEncodedAsset(webroot, url, lazy, "ngsw.json")
+			asset, err := shared.EncodedAsset(webroot, url, lazy, "ngsw.json")
 			if err != nil {
 				return nil, fmt.Errorf("failed to build encoded asset from manifest %s: %w", url, err)
 			}
@@ -117,19 +102,14 @@ func loadAssets(webroot string, assets []ngswAssetGroup) (manifest.EncodedAssets
 
 	// Next, load files not listed in the manifest
 	err := filepath.Walk(webroot, func(fpath string, info os.FileInfo, err error) error {
-		if err != nil {
+		switch {
+		case err != nil:
 			return err
-		}
-
-		if info.IsDir() {
+		case info.IsDir():
 			return nil
-		}
-
-		if strings.HasPrefix(filepath.Base(fpath), ".") {
+		case strings.HasPrefix(filepath.Base(fpath), "."):
 			return nil
-		}
-
-		if strings.HasPrefix(filepath.Base(fpath), "_") {
+		case strings.HasPrefix(filepath.Base(fpath), "_"):
 			return nil
 		}
 
@@ -144,7 +124,7 @@ func loadAssets(webroot string, assets []ngswAssetGroup) (manifest.EncodedAssets
 			return nil
 		}
 
-		asset, err := newEncodedAsset(webroot, url, true, "filesystem") // anything not in the manifest is assumed to be lazy-loaded
+		asset, err := shared.EncodedAsset(webroot, url, true, "filesystem") // anything not in the manifest is assumed to be lazy-loaded
 		if err != nil {
 			return fmt.Errorf("failed to build encoded asset from file %s: %w", fpath, err)
 		}
@@ -161,7 +141,7 @@ func loadAssets(webroot string, assets []ngswAssetGroup) (manifest.EncodedAssets
 	return result, nil
 }
 
-func parseManifest(webroot string) (result manifestDetails, err error) {
+func parseManifest(webroot string) (result log.ManifestDetails, err error) {
 	result.Path = filepath.Join(webroot, "ngsw.json")
 
 	var f *os.File

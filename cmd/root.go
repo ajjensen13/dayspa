@@ -109,6 +109,8 @@ func provideSite(webroot webRoot, mode modeType, lg gke.Logger) (*manifest.Site,
 	switch mode {
 	case "ngsw":
 		return load.Ngsw(string(webroot), lg)
+	case "filesystem":
+		return load.Filesystem(string(webroot), lg)
 	default:
 		return nil, fmt.Errorf("unsupported mode: %s (try --mode=ngsw)", mode)
 	}

@@ -15,22 +15,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package load
+package log
 
-import (
-	"github.com/ajjensen13/gke"
-
-	"github.com/ajjensen13/dayspa/internal/load/filesystem"
-	"github.com/ajjensen13/dayspa/internal/load/ngsw"
-	"github.com/ajjensen13/dayspa/internal/manifest"
-)
-
-// Ngsw loads an ngsw.json based webroot into a site manifest.
-func Ngsw(webroot string, lg gke.Logger) (*manifest.Site, error) {
-	return ngsw.Load(webroot, lg)
+type Entry struct {
+	WebRoot         string          `json:"web_root"`
+	ManifestDetails ManifestDetails `json:"manifest_details"`
+	SiteDetails     SiteDetails     `json:"site_details"`
 }
 
-// Filesystem loads a filesystem based webroot into a site manifest.
-func Filesystem(webroot string, lg gke.Logger) (*manifest.Site, error) {
-	return filesystem.Load(webroot, lg)
+type ManifestDetails struct {
+	Path     string
+	Manifest interface{}
+}
+
+type SiteDetails struct {
+	Index    string
+	Assets   []string
+	Checksum string
 }
